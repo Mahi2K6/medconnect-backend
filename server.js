@@ -131,26 +131,29 @@ app.get("/users", (req, res) => {
 /* REGISTER */
 
 app.post("/register", (req, res) => {
-    const { name, email, password, role, phone } = req.body;
+  const { name, email, password, role } = req.body;
 
-    let status = "active";
-    if (role === "doctor" || role === "pharmacist") {
-        status = "pending";
+  // Validate input
+  if (!name || !email || !password || !role) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  const sql = "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)";
+
+  db.query(sql, [name, email, password, role], (err, result) => {
+    if (err) {
+      console.error("REGISTER ERROR:", err);
+      return res.status(500).json({
+        error: "Database error",
+        details: err.message
+      });
     }
 
-    const sql =
-        "INSERT INTO users (name,email,password,role,phone,status) VALUES (?,?,?,?,?,?)";
-
-    db.query(sql, [name, email, password, role, phone, status], (err, result) => {
-        if (err) {
-            console.log(err);
-            res.status(500).send("Registration failed");
-        } else {
-            res.json({
-                message: "User registered successfully"
-            });
-        }
+    return res.json({
+      success: true,
+      message: "User registered successfully"
     });
+  });
 });
 
 /* LOGIN */
